@@ -92,14 +92,6 @@ export default {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-20px)" },
         },
-        "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(187 94% 43% / 0.3)" },
-          "50%": { boxShadow: "0 0 40px hsl(187 94% 43% / 0.5)" },
-        },
-        "shimmer": {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -108,13 +100,10 @@ export default {
         "scale-in": "scale-in 0.4s ease-out forwards",
         "slide-up": "slide-up 0.8s ease-out forwards",
         "float": "float 6s ease-in-out infinite",
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
-        "shimmer": "shimmer 2s linear infinite",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-primary': 'linear-gradient(135deg, hsl(187 94% 43%) 0%, hsl(270 70% 60%) 100%)',
-        'grid-pattern': 'linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px)',
+        'gradient-primary': 'linear-gradient(135deg, hsl(0 72% 63%) 0%, hsl(350 80% 70%) 100%)',
       },
     },
   },

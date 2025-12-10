@@ -23,12 +23,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 
-// Mock data for projects
+// Mock data for projects with placeholder images
 const mockProjects = [
-  { id: '1', name: 'Modern Living Room', updatedAt: new Date('2024-01-15'), thumbnail: null },
-  { id: '2', name: 'Cozy Bedroom', updatedAt: new Date('2024-01-14'), thumbnail: null },
-  { id: '3', name: 'Kitchen Renovation', updatedAt: new Date('2024-01-13'), thumbnail: null },
-  { id: '4', name: 'Office Space', updatedAt: new Date('2024-01-12'), thumbnail: null },
+  { id: '1', name: 'Modern Living Room', updatedAt: new Date('2024-01-15'), thumbnail: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&h=300&fit=crop' },
+  { id: '2', name: 'Cozy Bedroom', updatedAt: new Date('2024-01-14'), thumbnail: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop' },
+  { id: '3', name: 'Kitchen Renovation', updatedAt: new Date('2024-01-13'), thumbnail: 'https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=400&h=300&fit=crop' },
+  { id: '4', name: 'Office Space', updatedAt: new Date('2024-01-12'), thumbnail: 'https://images.unsplash.com/photo-600585154340-be6161a56a0c?w=400&h=300&fit=crop' },
 ];
 
 export default function Dashboard() {
