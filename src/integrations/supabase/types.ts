@@ -14,7 +14,140 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      furniture_models: {
+        Row: {
+          category_id: string
+          created_at: string
+          default_color: string | null
+          default_scale: Json | null
+          id: string
+          is_premium: boolean | null
+          model_type: string | null
+          model_url: string | null
+          name: string
+          thumbnail_url: string | null
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          default_color?: string | null
+          default_scale?: Json | null
+          id?: string
+          is_premium?: boolean | null
+          model_type?: string | null
+          model_url?: string | null
+          name: string
+          thumbnail_url?: string | null
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          default_color?: string | null
+          default_scale?: Json | null
+          id?: string
+          is_premium?: boolean | null
+          model_type?: string | null
+          model_url?: string | null
+          name?: string
+          thumbnail_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "furniture_models_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "model_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      model_categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string
+          furniture: Json | null
+          id: string
+          name: string
+          room_depth: number | null
+          room_width: number | null
+          thumbnail_url: string | null
+          updated_at: string
+          user_id: string
+          walls: Json | null
+        }
+        Insert: {
+          created_at?: string
+          furniture?: Json | null
+          id?: string
+          name?: string
+          room_depth?: number | null
+          room_width?: number | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id: string
+          walls?: Json | null
+        }
+        Update: {
+          created_at?: string
+          furniture?: Json | null
+          id?: string
+          name?: string
+          room_depth?: number | null
+          room_width?: number | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id?: string
+          walls?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
