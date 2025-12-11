@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,8 @@ import {
   Clock,
   Trash2,
   Copy,
-  Edit
+  Edit,
+  Loader2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -22,31 +23,102 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/hooks/useAuth';
+import { useProjects, Project } from '@/hooks/useProjects';
+import { toast } from '@/hooks/use-toast';
 
-// Mock data for projects with placeholder images
-const mockProjects = [
-  { id: '1', name: 'Modern Living Room', updatedAt: new Date('2024-01-15'), thumbnail: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&h=300&fit=crop' },
-  { id: '2', name: 'Cozy Bedroom', updatedAt: new Date('2024-01-14'), thumbnail: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop' },
-  { id: '3', name: 'Kitchen Renovation', updatedAt: new Date('2024-01-13'), thumbnail: 'https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=400&h=300&fit=crop' },
-  { id: '4', name: 'Office Space', updatedAt: new Date('2024-01-12'), thumbnail: 'https://images.unsplash.com/photo-600585154340-be6161a56a0c?w=400&h=300&fit=crop' },
+// Placeholder images for projects
+const placeholderImages = [
+  'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=400&h=300&fit=crop',
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop',
 ];
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { projects, isLoading: projectsLoading, createProject, deleteProject, duplicateProject } = useProjects();
   const [searchQuery, setSearchQuery] = useState('');
-  const [projects] = useState(mockProjects);
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!user && !authLoading) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
 
   const filteredProjects = projects.filter(p => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleCreateProject = () => {
-    navigate('/editor/new');
+  const handleCreateProject = async () => {
+    try {
+      const result = await createProject.mutateAsync('Untitled Room');
+      navigate(`/editor/${result.id}`);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create project',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleOpenProject = (id: string) => {
     navigate(`/editor/${id}`);
   };
+
+  const handleDeleteProject = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    try {
+      await deleteProject.mutateAsync(id);
+      toast({
+        title: 'Project deleted',
+        description: 'Your project has been deleted.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete project',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDuplicateProject = async (e: React.MouseEvent, project: Project) => {
+    e.stopPropagation();
+    try {
+      await duplicateProject.mutateAsync(project);
+      toast({
+        title: 'Project duplicated',
+        description: 'Your project has been duplicated.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to duplicate project',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const getPlaceholderImage = (index: number) => {
+    return placeholderImages[index % placeholderImages.length];
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -80,14 +152,16 @@ export default function Dashboard() {
         <div className="p-4 border-t border-border">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-              <span className="text-sm font-medium">JD</span>
+              <span className="text-sm font-medium">
+                {user?.email?.charAt(0).toUpperCase() || 'U'}
+              </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">John Doe</p>
-              <p className="text-sm text-muted-foreground truncate">john@example.com</p>
+              <p className="font-medium truncate">{user?.user_metadata?.full_name || 'User'}</p>
+              <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
             </div>
           </div>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground">
+          <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" onClick={handleSignOut}>
             <LogOut className="w-4 h-4" />
             Sign Out
           </Button>
@@ -99,8 +173,12 @@ export default function Dashboard() {
         {/* Header */}
         <header className="h-16 border-b border-border px-6 flex items-center justify-between">
           <h1 className="text-xl font-semibold font-heading">My Projects</h1>
-          <Button variant="hero" onClick={handleCreateProject}>
-            <Plus className="w-4 h-4" />
+          <Button variant="hero" onClick={handleCreateProject} disabled={createProject.isPending}>
+            {createProject.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Plus className="w-4 h-4" />
+            )}
             New Project
           </Button>
         </header>
@@ -118,65 +196,79 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Projects Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProjects.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="group glass rounded-xl overflow-hidden hover-lift cursor-pointer"
-                onClick={() => handleOpenProject(project.id)}
-              >
-                {/* Thumbnail */}
-                <div className="aspect-video bg-secondary/50 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Box className="w-12 h-12 text-muted-foreground/30" />
-                  </div>
-                  
-                  {/* Actions */}
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="glass" size="icon" className="h-8 w-8">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Rename
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Copy className="w-4 h-4 mr-2" />
-                          Duplicate
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
+          {/* Loading State */}
+          {projectsLoading && (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          )}
 
-                {/* Info */}
-                <div className="p-4">
-                  <h3 className="font-medium truncate group-hover:text-primary transition-colors">
-                    {project.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                    <Clock className="w-3 h-3" />
-                    {project.updatedAt.toLocaleDateString()}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {/* Projects Grid */}
+          {!projectsLoading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProjects.map((project, index) => (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="group glass rounded-xl overflow-hidden hover-lift cursor-pointer"
+                  onClick={() => handleOpenProject(project.id)}
+                >
+                  {/* Thumbnail */}
+                  <div className="aspect-video bg-secondary/50 relative overflow-hidden">
+                    <img 
+                      src={project.thumbnail_url || getPlaceholderImage(index)} 
+                      alt={project.name}
+                      className="w-full h-full object-cover"
+                    />
+                    
+                    {/* Actions */}
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="glass" size="icon" className="h-8 w-8">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => handleDuplicateProject(e, project)}>
+                            <Copy className="w-4 h-4 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-destructive"
+                            onClick={(e) => handleDeleteProject(e, project.id)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div className="p-4">
+                    <h3 className="font-medium truncate group-hover:text-primary transition-colors">
+                      {project.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                      <Clock className="w-3 h-3" />
+                      {new Date(project.updated_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           {/* Empty State */}
-          {filteredProjects.length === 0 && (
+          {!projectsLoading && filteredProjects.length === 0 && (
             <div className="text-center py-16">
               <Box className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
               <h3 className="text-lg font-semibold mb-2">No projects found</h3>

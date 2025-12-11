@@ -7,10 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Box, ArrowLeft, Mail, Lock, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user, loading: authLoading, signIn, signUp } = useAuth();
   const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') === 'signup');
   const [isLoading, setIsLoading] = useState(false);
   
@@ -24,20 +26,75 @@ export default function AuthPage() {
     setIsSignUp(searchParams.get('mode') === 'signup');
   }, [searchParams]);
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && !authLoading) {
+      navigate('/dashboard');
+    }
+  }, [user, authLoading, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate auth - will be replaced with Supabase
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(formData.email, formData.password, formData.name);
+        if (error) {
+          if (error.message.includes('already registered')) {
+            toast({
+              title: 'Account exists',
+              description: 'This email is already registered. Please sign in instead.',
+              variant: 'destructive',
+            });
+          } else {
+            toast({
+              title: 'Sign up failed',
+              description: error.message,
+              variant: 'destructive',
+            });
+          }
+        } else {
+          toast({
+            title: 'Account created!',
+            description: 'Welcome to RoomCraft!',
+          });
+          navigate('/dashboard');
+        }
+      } else {
+        const { error } = await signIn(formData.email, formData.password);
+        if (error) {
+          toast({
+            title: 'Sign in failed',
+            description: 'Invalid email or password.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Welcome back!',
+            description: 'Redirecting to dashboard...',
+          });
+          navigate('/dashboard');
+        }
+      }
+    } catch (err) {
       toast({
-        title: isSignUp ? 'Account created!' : 'Welcome back!',
-        description: 'Redirecting to dashboard...',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive',
       });
-      navigate('/dashboard');
-    }, 1500);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -99,7 +156,6 @@ export default function AuthPage() {
                     className="pl-10"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
                   />
                 </div>
               </div>
@@ -133,6 +189,7 @@ export default function AuthPage() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
+                  minLength={6}
                 />
               </div>
             </div>
@@ -164,11 +221,11 @@ export default function AuthPage() {
 
       {/* Right Panel - Visual */}
       <div className="hidden lg:flex flex-1 relative bg-card">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(187_94%_43%_/_0.15)_0%,transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/_0.15)_0%,transparent_70%)]" />
         <div 
           className="absolute inset-0 opacity-20"
           style={{
-            backgroundImage: 'linear-gradient(to right, hsl(222 47% 18%) 1px, transparent 1px), linear-gradient(to bottom, hsl(222 47% 18%) 1px, transparent 1px)',
+            backgroundImage: 'linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px)',
             backgroundSize: '40px 40px',
           }}
         />
