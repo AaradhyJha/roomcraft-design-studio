@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Play, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Suspense } from 'react';
+import { HeroPreview } from './HeroPreview';
 
 export function HeroSection() {
   return (
@@ -104,12 +106,15 @@ export function HeroSection() {
           className="mt-20 relative"
         >
           <div className="relative rounded-2xl overflow-hidden glass border border-border/50 shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
-            <div className="aspect-[16/9] bg-card flex items-center justify-center">
-              <div className="text-center p-8">
-                <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-gradient-primary opacity-20 animate-pulse" />
-                <p className="text-muted-foreground">Interactive 3D Editor Preview</p>
-              </div>
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none z-10" />
+            <div className="aspect-[16/9] bg-card">
+              <Suspense fallback={
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-32 h-32 rounded-full bg-gradient-primary opacity-20 animate-pulse" />
+                </div>
+              }>
+                <HeroPreview />
+              </Suspense>
             </div>
           </div>
           
