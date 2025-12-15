@@ -1,5 +1,11 @@
-import { Canvas, useFrame, ThreeEvent } from "@react-three/fiber";
-import { Environment, OrbitControls, useGLTF, Grid, TransformControls } from "@react-three/drei";
+import { Canvas, useFrame } from "@react-three/fiber";
+import {
+  Environment,
+  OrbitControls,
+  useGLTF,
+  Grid,
+  TransformControls,
+} from "@react-three/drei";
 import { useRef, Suspense, useState, useCallback } from "react";
 import * as THREE from "three";
 
@@ -68,7 +74,7 @@ function RoomModel({
       >
         <primitive object={scene.clone()} />
       </group>
-      
+
       {isSelected && activeTool !== "select" && groupRef.current && (
         <TransformControls
           object={groupRef.current}
@@ -119,69 +125,169 @@ function FallbackBox() {
   );
 }
 
-/* ---------------- Demo Walls ---------------- */
-
-function DemoWalls() {
-  const wallHeight = 1.5;
-  const wallThickness = 0.1;
-  const roomSize = 3;
-
-  return (
-    <group>
-      {/* Front wall */}
-      <mesh position={[0, wallHeight / 2, -roomSize / 2]} castShadow receiveShadow>
-        <boxGeometry args={[roomSize, wallHeight, wallThickness]} />
-        <meshStandardMaterial color="#e0e0e0" />
-      </mesh>
-      {/* Back wall */}
-      <mesh position={[0, wallHeight / 2, roomSize / 2]} castShadow receiveShadow>
-        <boxGeometry args={[roomSize, wallHeight, wallThickness]} />
-        <meshStandardMaterial color="#e0e0e0" />
-      </mesh>
-      {/* Left wall */}
-      <mesh position={[-roomSize / 2, wallHeight / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[wallThickness, wallHeight, roomSize]} />
-        <meshStandardMaterial color="#d0d0d0" />
-      </mesh>
-      {/* Right wall */}
-      <mesh position={[roomSize / 2, wallHeight / 2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[wallThickness, wallHeight, roomSize]} />
-        <meshStandardMaterial color="#d0d0d0" />
-      </mesh>
-    </group>
-  );
-}
-
 /* ---------------- Toolbar Overlay ---------------- */
 
-function ToolbarOverlay({
-  activeTool,
-  onToolChange,
-}: {
-  activeTool: string;
-  onToolChange: (tool: "select" | "move" | "rotate" | "scale") => void;
-}) {
+function ToolbarOverlay() {
   return (
-    <div className="absolute top-3 left-1/2 -translate-x-1/2 flex gap-1 glass rounded-lg p-1 z-10">
-      {[
-        { id: "select", label: "V", icon: "⊙" },
-        { id: "move", label: "G", icon: "⇲" },
-        { id: "rotate", label: "R", icon: "↻" },
-        { id: "scale", label: "S", icon: "⤡" },
-      ].map((tool) => (
+    <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+      {/* Left tools group */}
+      <div className="flex gap-1 glass rounded-lg p-1">
         <button
-          key={tool.id}
-          onClick={() => onToolChange(tool.id as any)}
-          className={`w-8 h-8 rounded text-xs font-medium transition-colors ${
-            activeTool === tool.id
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-          }`}
-          title={`${tool.id} (${tool.label})`}
+          className="w-9 h-9 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          title="Select"
         >
-          {tool.icon}
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
+          </svg>
         </button>
-      ))}
+        <button
+          className="w-9 h-9 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          title="Move"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20" />
+          </svg>
+        </button>
+        <button
+          className="w-9 h-9 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          title="Rotate"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+          </svg>
+        </button>
+        <button
+          className="w-9 h-9 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          title="Scale"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M21 21H3L21 3v18z" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="h-8 w-px bg-border" />
+
+      {/* Right tools group */}
+      <div className="flex gap-1 glass rounded-lg p-1">
+        <button
+          className="w-9 h-9 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          title="Undo"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M3 7v6h6" />
+            <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+          </svg>
+        </button>
+        <button
+          className="w-9 h-9 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          title="Redo"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M21 7v6h-6" />
+            <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7" />
+          </svg>
+        </button>
+        <button
+          className="w-9 h-9 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          title="Fullscreen"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="h-8 w-px bg-border" />
+
+      {/* View tools */}
+      <div className="flex gap-1 glass rounded-lg p-1">
+        <button
+          className="w-9 h-9 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          title="Grid"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg>
+        </button>
+        <button
+          className="w-9 h-9 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          title="View"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }
@@ -189,7 +295,6 @@ function ToolbarOverlay({
 /* ---------------- Hero Preview ---------------- */
 
 export function HeroPreview() {
-  const [activeTool, setActiveTool] = useState<"select" | "move" | "rotate" | "scale">("select");
   const [isSelected, setIsSelected] = useState(false);
   const [modelState, setModelState] = useState({
     position: [0, 0, 0] as [number, number, number],
@@ -198,20 +303,20 @@ export function HeroPreview() {
   });
 
   const handleTransformEnd = useCallback(
-    (pos: [number, number, number], rot: [number, number, number], scl: [number, number, number]) => {
+    (
+      pos: [number, number, number],
+      rot: [number, number, number],
+      scl: [number, number, number]
+    ) => {
       setModelState({ position: pos, rotation: rot, scale: scl });
     },
     []
   );
 
-  const handleFloorClick = () => {
-    setIsSelected(false);
-  };
-
   return (
     <div className="relative w-full h-full">
-      <ToolbarOverlay activeTool={activeTool} onToolChange={setActiveTool} />
-      
+      <ToolbarOverlay />
+
       <Canvas shadows camera={{ position: [5, 4, 5], fov: 45 }}>
         {/* Lights */}
         <ambientLight intensity={0.4} />
@@ -223,20 +328,6 @@ export function HeroPreview() {
         {/* Grid */}
         <EditorGrid />
 
-        {/* Floor */}
-        <mesh
-          rotation={[-Math.PI / 2, 0, 0]}
-          position={[0, 0, 0]}
-          receiveShadow
-          onClick={handleFloorClick}
-        >
-          <planeGeometry args={[10, 10]} />
-          <meshStandardMaterial color="#1a1a2e" />
-        </mesh>
-
-        {/* Demo Walls */}
-        <DemoWalls />
-
         {/* Room Model */}
         <Suspense fallback={<FallbackBox />}>
           <RoomModel
@@ -246,7 +337,7 @@ export function HeroPreview() {
             rotation={modelState.rotation}
             scale={modelState.scale}
             onTransformEnd={handleTransformEnd}
-            activeTool={activeTool}
+            activeTool="select"
           />
         </Suspense>
 
@@ -264,14 +355,8 @@ export function HeroPreview() {
 
       {/* Info Overlay */}
       <div className="absolute bottom-3 left-3 glass rounded-lg px-3 py-2 text-xs text-muted-foreground">
-        <span className="font-medium">Click model to select</span> • Drag to orbit
+        <span className="font-medium">Drag to orbit</span> • Scroll to zoom
       </div>
-
-      {isSelected && (
-        <div className="absolute bottom-3 right-3 glass rounded-lg px-3 py-2 text-xs text-primary">
-          ✓ Model selected - Use tools to transform
-        </div>
-      )}
     </div>
   );
 }
