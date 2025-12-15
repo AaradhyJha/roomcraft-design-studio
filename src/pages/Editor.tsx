@@ -99,90 +99,57 @@ function TransformableFurniture({
     }
   };
 
-  return (
-    <group
-      ref={groupRef}
-      position={item.position}
-      rotation={item.rotation}
-      scale={item.scale}
-    >
-      {isSelected &&
-        (activeTool === "move" ||
-          activeTool === "rotate" ||
-          activeTool === "scale") && (
-          <TransformControls
-            mode={getTransformMode()}
-            onMouseUp={handleTransformEnd}
-          >
-            <group>
-              {item.modelUrl ? (
-                <Suspense
-                  fallback={
-                    <mesh ref={meshRef} castShadow>
-                      <boxGeometry args={[1, 1, 1]} />
-                      <meshStandardMaterial color={item.color} />
-                    </mesh>
-                  }
-                >
-                  <GLTFModelInner url={item.modelUrl} />
-                </Suspense>
-              ) : (
-                <mesh ref={meshRef} castShadow>
-                  {item.modelType === "cylinder" ? (
-                    <cylinderGeometry args={[0.5, 0.5, 1, 32]} />
-                  ) : item.modelType === "sphere" ? (
-                    <sphereGeometry args={[0.5, 32, 32]} />
-                  ) : (
-                    <boxGeometry args={[1, 1, 1]} />
-                  )}
-                  <meshStandardMaterial
-                    color={item.color}
-                    emissive={item.color}
-                    emissiveIntensity={0.3}
-                  />
-                </mesh>
-              )}
-            </group>
-          </TransformControls>
-        )}
+  const showTransformControls = isSelected && (activeTool === "move" || activeTool === "rotate" || activeTool === "scale");
 
-      {(!isSelected || activeTool === "select" || activeTool === "wall") && (
-        <group
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect();
-          }}
-        >
-          {item.modelUrl ? (
-            <Suspense
-              fallback={
-                <mesh ref={meshRef} castShadow>
-                  <boxGeometry args={[1, 1, 1]} />
-                  <meshStandardMaterial color={item.color} />
-                </mesh>
-              }
-            >
-              <GLTFModelInner url={item.modelUrl} />
-            </Suspense>
-          ) : (
-            <mesh ref={meshRef} castShadow>
-              {item.modelType === "cylinder" ? (
-                <cylinderGeometry args={[0.5, 0.5, 1, 32]} />
-              ) : item.modelType === "sphere" ? (
-                <sphereGeometry args={[0.5, 32, 32]} />
-              ) : (
+  return (
+    <>
+      <group
+        ref={groupRef}
+        position={item.position}
+        rotation={item.rotation}
+        scale={item.scale}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+        }}
+      >
+        {item.modelUrl ? (
+          <Suspense
+            fallback={
+              <mesh ref={meshRef} castShadow>
                 <boxGeometry args={[1, 1, 1]} />
-              )}
-              <meshStandardMaterial
-                color={item.color}
-                emissive={isSelected ? item.color : "#000000"}
-                emissiveIntensity={isSelected ? 0.3 : 0}
-              />
-            </mesh>
-          )}
-        </group>
+                <meshStandardMaterial color={item.color} />
+              </mesh>
+            }
+          >
+            <GLTFModelInner url={item.modelUrl} />
+          </Suspense>
+        ) : (
+          <mesh ref={meshRef} castShadow>
+            {item.modelType === "cylinder" ? (
+              <cylinderGeometry args={[0.5, 0.5, 1, 32]} />
+            ) : item.modelType === "sphere" ? (
+              <sphereGeometry args={[0.5, 32, 32]} />
+            ) : (
+              <boxGeometry args={[1, 1, 1]} />
+            )}
+            <meshStandardMaterial
+              color={item.color}
+              emissive={isSelected ? item.color : "#000000"}
+              emissiveIntensity={isSelected ? 0.3 : 0}
+            />
+          </mesh>
+        )}
+      </group>
+      
+      {showTransformControls && groupRef.current && (
+        <TransformControls
+          object={groupRef.current}
+          mode={getTransformMode()}
+          onMouseUp={handleTransformEnd}
+        />
       )}
-    </group>
+    </>
   );
 }
 
