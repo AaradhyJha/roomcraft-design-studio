@@ -1,9 +1,28 @@
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Environment, OrbitControls } from '@react-three/drei';
-import { useRef } from 'react';
+import { Environment, OrbitControls, useGLTF } from '@react-three/drei';
+import { useRef, Suspense } from 'react';
 import * as THREE from 'three';
 
-function RotatingHouse() {
+const MODEL_URL = 'https://algdhvoyrlnrxpqjzqkt.supabase.co/storage/v1/object/public/models//tiny_isometric_room.glb';
+
+function RotatingModel() {
+  const groupRef = useRef<THREE.Group>(null);
+  const { scene } = useGLTF(MODEL_URL);
+  
+  useFrame((_, delta) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y += delta * 0.3;
+    }
+  });
+
+  return (
+    <group ref={groupRef} scale={[2, 2, 2]} position={[0, -0.5, 0]}>
+      <primitive object={scene.clone()} />
+    </group>
+  );
+}
+
+function FallbackHouse() {
   const groupRef = useRef<THREE.Group>(null);
   
   useFrame((_, delta) => {
@@ -53,16 +72,6 @@ function RotatingHouse() {
         <circleGeometry args={[2.5, 32]} />
         <meshStandardMaterial color="#228b22" />
       </mesh>
-      
-      {/* Bushes */}
-      <mesh position={[-1.2, 0.25, 0.6]} castShadow>
-        <sphereGeometry args={[0.25, 16, 16]} />
-        <meshStandardMaterial color="#2e8b57" />
-      </mesh>
-      <mesh position={[1.2, 0.25, 0.6]} castShadow>
-        <sphereGeometry args={[0.25, 16, 16]} />
-        <meshStandardMaterial color="#2e8b57" />
-      </mesh>
     </group>
   );
 }
@@ -79,7 +88,9 @@ export function HeroPreview() {
         shadow-mapSize-height={1024}
       />
       <Environment preset="sunset" />
-      <RotatingHouse />
+      <Suspense fallback={<FallbackHouse />}>
+        <RotatingModel />
+      </Suspense>
       <OrbitControls 
         enableZoom={false} 
         enablePan={false}
@@ -90,3 +101,6 @@ export function HeroPreview() {
     </Canvas>
   );
 }
+
+// Preload the model
+useGLTF.preload(MODEL_URL);

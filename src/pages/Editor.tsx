@@ -1,4 +1,4 @@
-import { useEffect, Suspense, useRef } from "react";
+import { useEffect, Suspense, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   useEditorStore,
@@ -19,80 +19,44 @@ import {
 } from "@react-three/drei";
 import * as THREE from "three";
 
-// Default project template
-const createDefaultProject = (name: string): Project => ({
-  id: crypto.randomUUID(),
-  name,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  furniture: [],
-  walls: [],
-  roomWidth: 10,
-  roomDepth: 10,
-});
+// Create room boundary walls
+const createBoundaryWalls = (width: number, depth: number): Omit<Wall, 'id'>[] => {
+  const halfWidth = width / 2;
+  const halfDepth = depth / 2;
+  const wallHeight = 2.5;
+  const wallThickness = 0.15;
 
-function GLTFModel({
-  url,
-  item,
-  isSelected,
-  onSelect,
-}: {
-  url: string;
-  item: FurnitureItem;
-  isSelected: boolean;
-  onSelect: () => void;
-}) {
+  return [
+    // Front wall
+    { start: [-halfWidth, -halfDepth], end: [halfWidth, -halfDepth], height: wallHeight, thickness: wallThickness },
+    // Back wall
+    { start: [-halfWidth, halfDepth], end: [halfWidth, halfDepth], height: wallHeight, thickness: wallThickness },
+    // Left wall
+    { start: [-halfWidth, -halfDepth], end: [-halfWidth, halfDepth], height: wallHeight, thickness: wallThickness },
+    // Right wall
+    { start: [halfWidth, -halfDepth], end: [halfWidth, halfDepth], height: wallHeight, thickness: wallThickness },
+  ];
+};
+
+// Default project template with boundary walls
+const createDefaultProject = (name: string, width: number = 10, depth: number = 10): Project => {
+  const boundaryWalls = createBoundaryWalls(width, depth);
+  return {
+    id: crypto.randomUUID(),
+    name,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    furniture: [],
+    walls: boundaryWalls.map(wall => ({ ...wall, id: crypto.randomUUID() })),
+    roomWidth: width,
+    roomDepth: depth,
+  };
+};
+
+function GLTFModelInner({ url }: { url: string }) {
   const { scene } = useGLTF(url);
   const clonedScene = scene.clone();
-
-  return (
-    <primitive
-      object={clonedScene}
-      position={item.position}
-      rotation={item.rotation}
-      scale={item.scale}
-      onClick={(e: ThreeEvent<MouseEvent>) => {
-        e.stopPropagation();
-        onSelect();
-      }}
-    />
-  );
-}
-
-function FallbackShape({
-  item,
-  isSelected,
-  onSelect,
-}: {
-  item: FurnitureItem;
-  isSelected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <mesh
-      position={item.position}
-      rotation={item.rotation}
-      scale={item.scale}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect();
-      }}
-      castShadow
-    >
-      {item.modelType === "cylinder" ? (
-        <cylinderGeometry args={[0.5, 0.5, 1, 32]} />
-      ) : item.modelType === "sphere" ? (
-        <sphereGeometry args={[0.5, 32, 32]} />
-      ) : (
-        <boxGeometry args={[1, 1, 1]} />
-      )}
-      <meshStandardMaterial
-        color={item.color}
-        emissive={isSelected ? item.color : "#000000"}
-        emissiveIntensity={isSelected ? 0.3 : 0}
-      />
-    </mesh>
-  );
+  return <primitive object={clonedScene} />;
 }
 
 function TransformableFurniture({
@@ -222,12 +186,6 @@ function TransformableFurniture({
   );
 }
 
-function GLTFModelInner({ url }: { url: string }) {
-  const { scene } = useGLTF(url);
-  const clonedScene = scene.clone();
-  return <primitive object={clonedScene} />;
-}
-
 function WallMesh({
   wall,
   isSelected,
@@ -313,9 +271,7 @@ function Scene() {
     setWallStartPoint,
   } = useEditorStore();
 
-  const [previewPoint, setPreviewPoint] = React.useState<
-    [number, number] | null
-  >(null);
+  const [previewPoint, setPreviewPoint] = useState<[number, number] | null>(null);
 
   const handleFloorClick = (e: ThreeEvent<MouseEvent>) => {
     if (activeTool === "wall") {
@@ -435,8 +391,6 @@ function Scene() {
   );
 }
 
-import React from "react";
-
 export default function Editor() {
   const { id } = useParams();
   const {
@@ -444,24 +398,61 @@ export default function Editor() {
     currentProject,
     setDrawingWall,
     setWallStartPoint,
+    setActiveTool,
   } = useEditorStore();
 
   useEffect(() => {
     if (id === "new" || !currentProject) {
-      setCurrentProject(createDefaultProject("Untitled Room"));
+      setCurrentProject(createDefaultProject("Untitled Room", 10, 10));
     }
   }, [id, setCurrentProject, currentProject]);
 
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setDrawingWall(false);
-        setWallStartPoint(null);
+      // Ignore if typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      switch (e.key.toLowerCase()) {
+        case "escape":
+          setDrawingWall(false);
+          setWallStartPoint(null);
+          setActiveTool("select");
+          break;
+        case "v":
+          setDrawingWall(false);
+          setWallStartPoint(null);
+          setActiveTool("select");
+          break;
+        case "g":
+          setDrawingWall(false);
+          setWallStartPoint(null);
+          setActiveTool("move");
+          break;
+        case "r":
+          setDrawingWall(false);
+          setWallStartPoint(null);
+          setActiveTool("rotate");
+          break;
+        case "s":
+          setDrawingWall(false);
+          setWallStartPoint(null);
+          setActiveTool("scale");
+          break;
+        case "w":
+          setActiveTool("wall");
+          break;
+        case "delete":
+        case "backspace":
+          // Delete selected item
+          break;
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [setDrawingWall, setWallStartPoint]);
+  }, [setDrawingWall, setWallStartPoint, setActiveTool]);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
@@ -476,8 +467,7 @@ export default function Editor() {
           </Canvas>
 
           <div className="absolute bottom-4 left-4 glass rounded-lg px-4 py-2 text-xs text-muted-foreground">
-            <span className="font-medium">Controls:</span> Drag to rotate •
-            Scroll to zoom • Right-click to pan • ESC to cancel wall
+            <span className="font-medium">Shortcuts:</span> V=Select • G=Move • R=Rotate • S=Scale • W=Wall • ESC=Cancel
           </div>
         </div>
 
