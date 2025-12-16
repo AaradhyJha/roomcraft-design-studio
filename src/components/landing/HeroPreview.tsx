@@ -10,7 +10,7 @@ import { useRef, Suspense, useState, useCallback } from "react";
 import * as THREE from "three";
 
 const MODEL_URL =
-  "https://algdhvoyrlnrxpqjzqkt.supabase.co/storage/v1/object/public/models//tiny_isometric_room.glb";
+  "https://algdhvoyrlnrxpqjzqkt.supabase.co/storage/v1/object/public/models/tiny_isometric_room.glb";
 
 /* ---------------- Interactive Room Model ---------------- */
 
