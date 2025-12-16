@@ -43,6 +43,8 @@ export function ModelCatalog() {
 
   const handleAddModel = (model: FurnitureModel) => {
     const scale = model.default_scale as [number, number, number];
+    // Fix double slashes in model URLs
+    const sanitizedUrl = model.model_url?.replace(/([^:]\/)\/+/g, '$1') || null;
     addFurniture({
       name: model.name,
       category: model.category_name,
@@ -51,7 +53,7 @@ export function ModelCatalog() {
       scale,
       modelType: model.model_type as 'box' | 'cylinder' | 'sphere',
       color: model.default_color,
-      modelUrl: model.model_url,
+      modelUrl: sanitizedUrl,
     });
   };
 
